@@ -1,11 +1,12 @@
 from openai import OpenAI
 from dotenv import load_dotenv
-import json, os
+from chat import Chat
+import os
 
 
 load_dotenv()
 client = OpenAI(api_key = os.environ.get('API_KEY'))
-rol = 'Traductor'
+
 prompt1 = """
     Al usuario le han dado el enunciado de un historia a medio terminar.
     Tu trabajo es responder preguntas de si o no que te hara el usuario para tratar de adivinar la historia.
@@ -23,26 +24,43 @@ prompt2 = """
     Las multinacionales petroleras le habian ofrecido un monton de dinero por olvidarse de su invento.
     Pero la mujer se nego, asi que las multinacionales recurrieron al asesinato de la mujer</historia>
 """
-print("Bienvenido a las black stories")
-list_messages = [
-            {"role": "system", "content": prompt1},
-            {"role": "system", "content": prompt2},
-        ]
-list_messages.append({"role": "user", "content": input('Pregunta: ')})
-while True:
-    response = client.chat.completions.create(
-        model = "gpt-3.5-turbo-1106",
-        response_format = {"type": "json_object" },
-        messages = list_messages
-    )
-    json_response = json.loads(response.choices[0].message.content)
-    print(json_response)
+
+prompt3 = """
+    Tendras que averiguar si las preguntas de un usuario han adivinado ciertos puntos de la historia
+    Tu respuesta sera un JSON:
+    {
+        "reasoning": "" #Razonamiento de tus respuestas
+        "water_engine": "" #Pon True si el usuario ha adivinado especificamente que la mujer invento un motor de agua, en caso contrario False
+        "oil_industries_threat": "" #Pon True si el usuario ha adivinado que la invencion era una amenaza para las industrias petroleras, en caso contrario False
+        "oil_industries_murder": "" #Pon True si el usuario ha adivinado que las industrias petroleras mataron a la mujer, en caso contrario False
+    }
+"""
+
+
+
+def yes_or_no(json_response: dict):
     if json_response['yes_or_no'] == '': print("La pregunta no puede ser respondida con 'si' o 'no'") 
     else: print(json_response['yes_or_no'])
-    facts_guessed = 0
-    # for fact in json_response['things_guessed'].values():
-    #     if fact: facts_guessed += 1
-    # if facts_guessed == 2: break
-    list_messages.append({"role": "system", "content": response.choices[0].message.content})
-    list_messages.append({"role": "user", "content": input('Pregunta: ')})
+
+def view_achievements(json_response: dict):
+    facts_achieved = 0
+    for key in json_response:
+        if key == "reasoning": continue
+        if json_response[key]: facts_achieved += 1
+    if facts_achieved >= 2: return True
+    return False
+
+print("Bienvenido a las black stories")
+
+chat_yes_no: Chat = Chat(client, prompt1, prompt2)
+chat_achievements: Chat = Chat(client, prompt3)
+
+while True:
+    question = input('Pregunta: ')
+    
+    yes_or_no(chat_yes_no.send_message(question))
+    achievements = chat_achievements.send_message(question)
+    print(achievements)
+    if view_achievements(achievements): break
+
 print('Has adivinado la historia correctamente!!!')
