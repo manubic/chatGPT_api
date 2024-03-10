@@ -26,14 +26,17 @@ prompt2 = """
 """
 
 prompt3 = """
-    Tendras que averiguar si las preguntas de un usuario han adivinado ciertos puntos de la historia
+    Tendras que averiguar si las preguntas de un usuario han adivinado ciertos puntos de una historia
     Tu respuesta sera un JSON:
     {
         "reasoning": "" #Razonamiento de tus respuestas
-        "water_engine": "" #Pon True si el usuario ha adivinado especificamente que la mujer invento un motor de agua, en caso contrario False
-        "oil_industries_threat": "" #Pon True si el usuario ha adivinado que la invencion era una amenaza para las industrias petroleras, en caso contrario False
-        "oil_industries_murder": "" #Pon True si el usuario ha adivinado que las industrias petroleras mataron a la mujer, en caso contrario False
+        "water_engine": "" #Pon True si el usuario ha adivinado especificamente que la mujer sabe como construir un motor de agua, en caso contrario, False
+        "oil_industries_threat": "" #Pon True si el usuario ha adivinado que la invencion era una amenaza para las industrias petroleras, en caso contrario, False
+        "oil_industries_murder": "" #Pon True si el usuario ha adivinado que las industrias petroleras mataron a la mujer, en caso contrario, False
     }
+    <historia> Una mujer habia inventado un motor que funcionaba con agua, esto significa el fin de la industria del petroleo.
+    Las multinacionales petroleras le habian ofrecido un monton de dinero por olvidarse de su invento.
+    Pero la mujer se nego, asi que las multinacionales recurrieron al asesinato de la mujer </historia>
 """
 
 
@@ -47,7 +50,7 @@ def view_achievements(json_response: dict):
     for key in json_response:
         if key == "reasoning": continue
         if json_response[key]: facts_achieved += 1
-    if facts_achieved >= 2: return True
+    if facts_achieved >= len(json_response)-1: return True
     return False
 
 print("Bienvenido a las black stories")
