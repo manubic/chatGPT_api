@@ -1,40 +1,34 @@
 import pyaudio
 import wave
 from openai import OpenAI
-import json
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
-def grabar():
-    chunk = 1024  # Record in chunks of 1024 samples
-    sample_format = pyaudio.paInt16  # 16 bits per sample
+def grabar(client):
+    chunks = 1024
+    sample_format = pyaudio.paInt16
     channels = 1
-    fs = 44100  # Record at 44100 samples per second
-    seconds = 5
+    fs = 44100
+    seconds = 3
     filename = "output.wav"
 
-    p = pyaudio.PyAudio()  # Create an interface to PortAudio
+    p = pyaudio.PyAudio()
 
     print('Recording')
 
     stream = p.open(format=sample_format,
                     channels=channels,
                     rate=fs,
-                    frames_per_buffer=chunk,
+                    frames_per_buffer=chunks,
                     input=True)
 
-    frames = []  # Initialize array to store frames
+    frames = []
 
-    # Store data in chunks for 3 seconds
-    for i in range(0, int(fs / chunk * seconds)):
-        data = stream.read(chunk)
+    for i in range(0, int(fs / chunks * seconds)):
+        data = stream.read(chunks)
         frames.append(data)
 
-    # Stop and close the stream 
     stream.stop_stream()
     stream.close()
-    # Terminate the PortAudio interface
+
     p.terminate()
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
@@ -43,11 +37,9 @@ def grabar():
     wf.writeframes(b''.join(frames))
     wf.close()
 
-    client = OpenAI(api_key = os.environ.get('API_KEY'))
-
-    audio_file= open("output.wav", "rb")
+    audio_file = open("output.wav", "rb")
     transcript = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file=audio_file
+        model="whisper-1", 
+        file=audio_file
     )
     return transcript.text

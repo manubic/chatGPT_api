@@ -166,3 +166,4 @@ atlassian-ide-plugin.xml
 .history/
 ignore/
 .DS_Store
+.wav
